@@ -1,0 +1,37 @@
+{
+  "data": {
+    "uuid": "bbbb1111-1111-1111-1111-111111111111",
+    "status": "active",
+    "industry": "SaaS",
+    "brand": {"uuid": "11111111-1111-1111-1111-111111111111", "name": "Acme"},
+    "brand_name": "Acme",
+    "brand_url": "https://acme.example",
+    "tracking_frequency": "weekly",
+    "last_run_at": "2026-07-20T03:00:00.000000Z",
+    "created_at": "2026-06-10T09:00:00.000000Z",
+    "latest_snapshot": {
+      "date": "2026-07-20",
+      "provider": null,
+      "visibility_score": 64.2,
+      "mention_count": 18,
+      "total_prompts": 30,
+      "avg_position": 2.4,
+      "sentiment": {"positive": 12, "neutral": 5, "negative": 1, "net_score": 36.7},
+      "competitors": [{"name": "Rival", "share": 22.0}],
+      "top_citations": [{"domain": "acme.example", "count": 6}]
+    },
+    "recommendations": {
+      "full_access": false,
+      "data": {
+        "overall_score_0_10": 5,
+        "executive_summary": "Improve share of voice.",
+        "action_plan": [
+          {"title": "Target comparison prompts", "priority": "P0"},
+          {"title": "Add proof points", "priority": "P1"},
+          {"title": "Expand FAQ", "priority": "P2"}
+        ]
+      },
+      "locked_actions": 5
+    }
+  }
+}

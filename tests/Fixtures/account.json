@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": 42,
+    "name": "Jan Kowalski",
+    "email": "jan@example.com",
+    "created_at": "2026-06-01T10:00:00.000000Z",
+    "subscription": {
+      "status": "trial",
+      "plan": "Starter",
+      "on_trial": true,
+      "trial_days_remaining": 5,
+      "has_full_access": false
+    },
+    "quota": {
+      "plan_name": "Starter",
+      "brands": 1,
+      "audits_per_month": 3,
+      "competitors_per_brand": 1,
+      "custom_queries_per_brand": 3,
+      "trend_history_days": 30,
+      "white_label": false
+    },
+    "usage": {
+      "brands": 1,
+      "monitors": 1,
+      "audits_this_month": 1,
+      "audits_remaining": 2,
+      "audit_quota_resets_at": "2026-08-01T00:00:00.000000Z"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": [
+    {
+      "uuid": "dddd1111-1111-1111-1111-111111111111",
+      "provider": "gemini",
+      "prompt_template_id": 10,
+      "prompt": "What are the best SaaS tools?",
+      "response": "Top tools include Acme...",
+      "brand_mentioned": true,
+      "brand_position": 1,
+      "competitor_mentions": [{"name": "Rival Inc", "position": 3}],
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "citations": [{"url": "https://acme.example"}],
+      "executed_at": "2026-07-20T03:10:00.000000Z"
+    },
+    {
+      "uuid": "dddd2222-2222-2222-2222-222222222222",
+      "provider": "openai",
+      "prompt_template_id": 10,
+      "prompt": "What are the best SaaS tools?",
+      "response": "Several options exist...",
+      "brand_mentioned": false,
+      "brand_position": null,
+      "competitor_mentions": [],
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "citations": [],
+      "executed_at": "2026-07-20T03:09:00.000000Z"
+    }
+  ],
+  "links": {"first": null, "last": null, "prev": null, "next": "https://brandgeo.test/api/v1/monitors/x/runs?cursor=abc123"},
+  "meta": {"path": "x", "per_page": 2, "next_cursor": "abc123", "prev_cursor": null}
+}

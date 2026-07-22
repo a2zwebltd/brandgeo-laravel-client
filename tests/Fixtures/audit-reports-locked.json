@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "uuid": "cccc1111-1111-1111-1111-111111111111",
+      "provider": "gemini",
+      "mode": "trained",
+      "model": "gemini-2.5-flash",
+      "status": "done",
+      "normalized_score": 72.5,
+      "grade": "B",
+      "result": {"scoring_summary": {"grade": "B"}},
+      "sources": null,
+      "findings": null,
+      "processed_at": "2026-06-10T09:20:00.000000Z"
+    },
+    {"uuid": "cccc3333-3333-3333-3333-333333333333", "provider": "openai", "mode": "trained", "status": "locked"},
+    {"uuid": "cccc4444-4444-4444-4444-444444444444", "provider": "anthropic", "mode": "trained", "status": "locked"},
+    {"uuid": "cccc5555-5555-5555-5555-555555555555", "provider": "xai", "mode": "trained", "status": "locked"},
+    {"uuid": "cccc6666-6666-6666-6666-666666666666", "provider": "deepseek", "mode": "trained", "status": "locked"}
+  ]
+}

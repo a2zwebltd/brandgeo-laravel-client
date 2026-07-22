@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "uuid": "dddd3333-3333-3333-3333-333333333333",
+      "provider": "xai",
+      "prompt_template_id": 11,
+      "prompt": "Is Acme good for startups?",
+      "response": "Yes, Acme is popular...",
+      "brand_mentioned": true,
+      "brand_position": 1,
+      "competitor_mentions": [],
+      "sentiment": "positive",
+      "sentiment_score": 0.9,
+      "citations": [],
+      "executed_at": "2026-07-20T03:08:00.000000Z"
+    }
+  ],
+  "links": {"first": null, "last": null, "prev": null, "next": null},
+  "meta": {"path": "x", "per_page": 2, "next_cursor": null, "prev_cursor": "def456"}
+}

@@ -1,0 +1,78 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "a2zwebltd/brandgeo-laravel-client",
+    "description": "Official Laravel client (SDK) for the BrandGEO public API — brands, AI visibility audits and monitoring data with typed DTOs.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "brandgeo",
+        "sdk",
+        "api-client",
+        "geo",
+        "ai-visibility",
+        "brand-monitoring"
+    ],
+    "homepage": "https://github.com/a2zwebltd/brandgeo-laravel-client",
+    "support": {
+        "issues": "https://github.com/a2zwebltd/brandgeo-laravel-client/issues",
+        "source": "https://github.com/a2zwebltd/brandgeo-laravel-client"
+    },
+    "authors": [
+        {
+            "name": "A2Z WEB",
+            "homepage": "https://a2zweb.co/"
+        },
+        {
+            "name": "Dawid Makowski",
+            "role": "Maintainer",
+            "homepage": "https://github.com/makowskid"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.8",
+        "laravel/framework": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.25",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "A2ZWeb\\BrandGeoClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "A2ZWeb\\BrandGeoClient\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "A2ZWeb\\BrandGeoClient\\BrandGeoClientServiceProvider"
+            ],
+            "aliases": {
+                "BrandGeo": "A2ZWeb\\BrandGeoClient\\Facades\\BrandGeo"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "lint": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

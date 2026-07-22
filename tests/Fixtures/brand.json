@@ -1,0 +1,17 @@
+{
+  "data": {
+    "uuid": "11111111-1111-1111-1111-111111111111",
+    "name": "Acme",
+    "url": "https://acme.example",
+    "industry": "SaaS",
+    "created_at": "2026-06-10T09:00:00.000000Z",
+    "updated_at": "2026-06-11T09:00:00.000000Z",
+    "latest_audit": {
+      "uuid": "aaaa1111-1111-1111-1111-111111111111",
+      "status": "done",
+      "overall_score": 72.5,
+      "created_at": "2026-06-10T09:05:00.000000Z"
+    },
+    "monitor": {"uuid": "bbbb1111-1111-1111-1111-111111111111", "status": "active"}
+  }
+}

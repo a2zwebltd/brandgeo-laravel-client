@@ -1,0 +1,7 @@
+{
+  "data": [
+    {"date": "2026-07-13", "provider": null, "visibility_score": 60.0, "mention_count": 16, "total_prompts": 30, "avg_position": 2.8, "sentiment": {"positive": 10, "neutral": 6, "negative": 2, "net_score": 26.7}, "competitors": null, "top_citations": null},
+    {"date": "2026-07-20", "provider": null, "visibility_score": 64.2, "mention_count": 18, "total_prompts": 30, "avg_position": 2.4, "sentiment": {"positive": 12, "neutral": 5, "negative": 1, "net_score": 36.7}, "competitors": null, "top_citations": null}
+  ],
+  "meta": {"days_applied": 30, "days_max": 30}
+}

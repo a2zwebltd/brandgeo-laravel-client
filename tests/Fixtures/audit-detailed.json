@@ -1,0 +1,56 @@
+{
+  "data": {
+    "uuid": "aaaa1111-1111-1111-1111-111111111111",
+    "status": "done",
+    "brand": {"uuid": "11111111-1111-1111-1111-111111111111", "name": "Acme", "url": "https://acme.example"},
+    "brand_name": "Acme",
+    "brand_url": "https://acme.example",
+    "overall_score": 72.5,
+    "recommendations_status": "done",
+    "share_url": "https://brandgeo.test/r/tok_abc",
+    "created_at": "2026-06-10T09:05:00.000000Z",
+    "updated_at": "2026-06-10T10:00:00.000000Z",
+    "reports": [
+      {
+        "uuid": "cccc1111-1111-1111-1111-111111111111",
+        "provider": "gemini",
+        "mode": "trained",
+        "model": "gemini-2.5-flash",
+        "status": "done",
+        "normalized_score": 72.5,
+        "grade": "B",
+        "result": {"scoring_summary": {"normalized_score_out_of_100": 72.5, "grade": "B"}},
+        "sources": null,
+        "findings": [{"title": "Strong recognition"}],
+        "processed_at": "2026-06-10T09:20:00.000000Z"
+      },
+      {
+        "uuid": "cccc2222-2222-2222-2222-222222222222",
+        "provider": "openai",
+        "mode": "trained",
+        "model": "gpt-5.5",
+        "status": "failed",
+        "normalized_score": null,
+        "grade": null,
+        "result": null,
+        "sources": null,
+        "findings": null,
+        "error": "The AI provider was temporarily unavailable.",
+        "processed_at": null
+      }
+    ],
+    "recommendations": {
+      "full_access": false,
+      "data": {
+        "overall_score_0_10": 6.5,
+        "executive_summary": "Solid foundation with clear GEO gaps to close.",
+        "action_plan": [
+          {"title": "Add Organization schema", "why": "Low discoverability", "horizon": "web", "priority": "P0", "effort": "1 hour", "impact": "High", "how": "Paste the JSON-LD."},
+          {"title": "Create comparison pages", "why": "Missing coverage", "horizon": "web", "priority": "P1", "effort": "1 week", "impact": "High", "how": "Write vs-competitor pages."},
+          {"title": "Publish an FAQ", "why": "Extraction gaps", "horizon": "web", "priority": "P2", "effort": "2 days", "impact": "Medium", "how": "Answer-first sections."}
+        ]
+      },
+      "locked_actions": 9
+    }
+  }
+}

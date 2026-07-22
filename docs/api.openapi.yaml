@@ -1,0 +1,887 @@
+openapi: 3.1.0
+info:
+  title: BrandGEO Public API
+  version: 1.0.0
+  description: |
+    Read-only REST API for BrandGEO account, brand, audit and monitoring data.
+
+    **Authentication** — generate an API key at Settings → API (`/settings/api`) and send it
+    as a bearer token. Keys are stored hashed and shown exactly once; regenerating revokes
+    the previous key immediately.
+
+    **Access rules (mirror of the web paywall)** — `/account` and list endpoints are always
+    reachable for authenticated keys. Detail and nested endpoints require an active
+    subscription, trial or internal (free) account; expired trials receive
+    `402 {"message": "Subscription required."}`. Trial users see audit engines other than
+    Gemini as `locked` stubs and recommendation previews only.
+
+    **Rate limits** — 120 req/min (paid / free accounts), 30 req/min (trial and expired
+    trial), reported via `X-RateLimit-*` headers.
+servers:
+  - url: https://brandgeo.co/api/v1
+    description: Production
+security:
+  - apiKey: []
+tags:
+  - name: Account
+    description: Authenticated account, subscription status, plan quota and usage
+  - name: Brands
+    description: Brands — the unifying entity for audits and monitoring
+  - name: Audits
+    description: One-time brand visibility audits and their per-engine reports
+  - name: Monitors
+    description: Continuous weekly monitoring — competitors, prompts, runs, snapshots and trends
+
+paths:
+  /account:
+    get:
+      tags: [Account]
+      operationId: getAccount
+      summary: Get the authenticated account, subscription status, plan quota and usage
+      responses:
+        '200':
+          description: Account details
+          headers:
+            X-RateLimit-Limit: {$ref: '#/components/headers/X-RateLimit-Limit'}
+            X-RateLimit-Remaining: {$ref: '#/components/headers/X-RateLimit-Remaining'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/Account'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /brands:
+    get:
+      tags: [Brands]
+      operationId: listBrands
+      summary: List the account's brands (newest first)
+      parameters:
+        - {$ref: '#/components/parameters/page'}
+        - {$ref: '#/components/parameters/perPage'}
+      responses:
+        '200':
+          description: Page of brands
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/PagePaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/Brand'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /brands/{uuid}:
+    get:
+      tags: [Brands]
+      operationId: getBrand
+      summary: Get one brand with its latest-audit and monitor summaries
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+      responses:
+        '200':
+          description: Brand details
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/Brand'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /audits:
+    get:
+      tags: [Audits]
+      operationId: listAudits
+      summary: List the account's audits (newest first)
+      parameters:
+        - name: brand
+          in: query
+          description: Filter by brand uuid
+          schema: {type: string, format: uuid}
+        - name: status
+          in: query
+          schema: {$ref: '#/components/schemas/AuditStatus'}
+        - {$ref: '#/components/parameters/page'}
+        - {$ref: '#/components/parameters/perPage'}
+      responses:
+        '200':
+          description: Page of audits (without reports / recommendations)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/PagePaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/Audit'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /audits/{uuid}:
+    get:
+      tags: [Audits]
+      operationId: getAudit
+      summary: Get one audit with per-engine reports and gated recommendations
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+      responses:
+        '200':
+          description: Audit details. `reports` and `recommendations` are present on this endpoint.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/AuditDetailed'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /audits/{uuid}/reports:
+    get:
+      tags: [Audits]
+      operationId: listAuditReports
+      summary: List one audit's per-engine reports (cheap status polling)
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+      responses:
+        '200':
+          description: All reports for the audit (not paginated — max 10 rows)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: '#/components/schemas/AuditReport'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors:
+    get:
+      tags: [Monitors]
+      operationId: listMonitors
+      summary: List the account's brand monitors (newest first)
+      parameters:
+        - name: brand
+          in: query
+          description: Filter by brand uuid
+          schema: {type: string, format: uuid}
+        - name: status
+          in: query
+          schema: {$ref: '#/components/schemas/MonitorStatus'}
+        - {$ref: '#/components/parameters/page'}
+        - {$ref: '#/components/parameters/perPage'}
+      responses:
+        '200':
+          description: Page of monitors (without latest snapshot / recommendations)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/PagePaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/Monitor'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}:
+    get:
+      tags: [Monitors]
+      operationId: getMonitor
+      summary: Get one monitor with its latest overall snapshot and gated recommendations
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+      responses:
+        '200':
+          description: Monitor details. `latest_snapshot` and `recommendations` are present on this endpoint.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/MonitorDetailed'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}/competitors:
+    get:
+      tags: [Monitors]
+      operationId: listMonitorCompetitors
+      summary: List a monitor's tracked competitors
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+        - {$ref: '#/components/parameters/page'}
+        - {$ref: '#/components/parameters/perPage'}
+      responses:
+        '200':
+          description: Page of competitors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/PagePaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/Competitor'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}/prompt-templates:
+    get:
+      tags: [Monitors]
+      operationId: listMonitorPromptTemplates
+      summary: List a monitor's prompt templates (standard + custom queries)
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+        - name: is_active
+          in: query
+          schema: {type: boolean}
+        - {$ref: '#/components/parameters/page'}
+        - {$ref: '#/components/parameters/perPage'}
+      responses:
+        '200':
+          description: Page of prompt templates
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/PagePaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/PromptTemplate'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}/runs:
+    get:
+      tags: [Monitors]
+      operationId: listMonitorRuns
+      summary: List a monitor's prompt runs (cursor-paginated, newest first)
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+        - name: provider
+          in: query
+          schema: {$ref: '#/components/schemas/Provider'}
+        - name: brand_mentioned
+          in: query
+          schema: {type: boolean}
+        - name: template
+          in: query
+          description: Filter by prompt template id
+          schema: {type: integer}
+        - name: from
+          in: query
+          description: Only runs executed on/after this date
+          schema: {type: string, format: date}
+        - name: to
+          in: query
+          description: Only runs executed on/before this date
+          schema: {type: string, format: date}
+        - {$ref: '#/components/parameters/cursor'}
+        - {$ref: '#/components/parameters/perPageCursor'}
+      responses:
+        '200':
+          description: Cursor page of prompt runs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/CursorPaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/PromptRun'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}/snapshots:
+    get:
+      tags: [Monitors]
+      operationId: listMonitorSnapshots
+      summary: List a monitor's visibility snapshots (cursor-paginated, newest first)
+      description: |
+        Defaults to the **overall** (cross-engine aggregate) rows only, i.e. `provider: null`.
+        Pass `provider=<engine>` for one engine's rows or `provider=all` for everything.
+        The history window is capped at the plan's `trend_history_days`.
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+        - name: provider
+          in: query
+          schema:
+            type: string
+            enum: [openai, anthropic, gemini, xai, deepseek, all]
+        - {$ref: '#/components/parameters/cursor'}
+        - {$ref: '#/components/parameters/perPageCursor'}
+      responses:
+        '200':
+          description: Cursor page of snapshots
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - {$ref: '#/components/schemas/CursorPaginated'}
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: {$ref: '#/components/schemas/VisibilitySnapshot'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+  /monitors/{uuid}/trend:
+    get:
+      tags: [Monitors]
+      operationId: getMonitorTrend
+      summary: Visibility trend (overall rows, oldest first), clamped to the plan's history window
+      parameters:
+        - {$ref: '#/components/parameters/uuid'}
+        - name: days
+          in: query
+          description: Requested window in days (default 30). Clamped to the plan's `trend_history_days` — the applied value is echoed in `meta.days_applied`.
+          schema: {type: integer, minimum: 1, default: 30}
+      responses:
+        '200':
+          description: Trend points (not paginated)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: '#/components/schemas/VisibilitySnapshot'}
+                  meta:
+                    type: object
+                    required: [days_applied, days_max]
+                    properties:
+                      days_applied: {type: integer}
+                      days_max: {type: integer}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '402': {$ref: '#/components/responses/SubscriptionRequired'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+        '429': {$ref: '#/components/responses/TooManyRequests'}
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: API key generated at Settings → API. Format `{id}|{random}` — send verbatim.
+
+  parameters:
+    uuid:
+      name: uuid
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    page:
+      name: page
+      in: query
+      schema: {type: integer, minimum: 1, default: 1}
+    perPage:
+      name: per_page
+      in: query
+      description: Items per page (default 25). Values above 100 are clamped to 100.
+      schema: {type: integer, minimum: 1, default: 25}
+    perPageCursor:
+      name: per_page
+      in: query
+      description: Items per page (default 50). Values above 100 are clamped to 100.
+      schema: {type: integer, minimum: 1, default: 50}
+    cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from `meta.next_cursor` / `meta.prev_cursor`.
+      schema: {type: string}
+
+  headers:
+    X-RateLimit-Limit:
+      description: Request limit per minute for this account
+      schema: {type: integer}
+    X-RateLimit-Remaining:
+      description: Requests remaining in the current window
+      schema: {type: integer}
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                    examples: [Unauthorized]
+    SubscriptionRequired:
+      description: Expired trial / cancelled account — detail endpoints are paywalled
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message:
+                type: string
+                examples: [Subscription required.]
+    NotFound:
+      description: Resource missing or not owned by the key's account (indistinguishable by design)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    ValidationError:
+      description: Invalid query parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message, errors]
+            properties:
+              message: {type: string}
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: {type: string}
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds until the window resets
+          schema: {type: integer}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: {type: string}
+
+    Provider:
+      type: string
+      description: AI engine identifier
+      enum: [openai, anthropic, gemini, xai, deepseek]
+
+    AuditMode:
+      type: string
+      description: '`trained` = model knowledge only, `web_search` = live web search'
+      enum: [trained, web_search]
+
+    AuditStatus:
+      type: string
+      enum: [queued, processing, done, failed]
+
+    MonitorStatus:
+      type: string
+      enum: [active, paused, archived]
+
+    PromptCategory:
+      type: string
+      enum: [discovery, comparison, recommendation, sentiment, feature, use_case, custom]
+
+    SubscriptionStatus:
+      type: string
+      description: '`trial` = active trial, `active` = paid subscription, `free` = internal unlimited account, `expired` = trial ended without subscribing'
+      enum: [trial, active, free, expired]
+
+    PagePaginated:
+      type: object
+      description: Standard Laravel page-based pagination envelope
+      required: [data, links, meta]
+      properties:
+        data: {type: array}
+        links:
+          type: object
+          properties:
+            first: {type: [string, 'null']}
+            last: {type: [string, 'null']}
+            prev: {type: [string, 'null']}
+            next: {type: [string, 'null']}
+        meta:
+          type: object
+          properties:
+            current_page: {type: integer}
+            from: {type: [integer, 'null']}
+            last_page: {type: integer}
+            path: {type: string}
+            per_page: {type: integer}
+            to: {type: [integer, 'null']}
+            total: {type: integer}
+            links:
+              type: array
+              items:
+                type: object
+                properties:
+                  url: {type: [string, 'null']}
+                  label: {type: string}
+                  active: {type: boolean}
+
+    CursorPaginated:
+      type: object
+      description: Standard Laravel cursor-based pagination envelope
+      required: [data, links, meta]
+      properties:
+        data: {type: array}
+        links:
+          type: object
+          properties:
+            first: {type: [string, 'null']}
+            last: {type: [string, 'null']}
+            prev: {type: [string, 'null']}
+            next: {type: [string, 'null']}
+        meta:
+          type: object
+          properties:
+            path: {type: string}
+            per_page: {type: integer}
+            next_cursor: {type: [string, 'null']}
+            prev_cursor: {type: [string, 'null']}
+
+    Account:
+      type: object
+      required: [id, name, email, created_at, subscription, quota, usage]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        email: {type: string, format: email}
+        created_at: {type: string, format: date-time}
+        subscription:
+          type: object
+          required: [status, plan, on_trial, trial_days_remaining, has_full_access]
+          properties:
+            status: {$ref: '#/components/schemas/SubscriptionStatus'}
+            plan:
+              type: [string, 'null']
+              description: Plan display name (e.g. Starter, Business, Agency)
+            on_trial: {type: boolean}
+            trial_days_remaining:
+              type: [integer, 'null']
+              description: Only set while on trial
+            has_full_access:
+              type: boolean
+              description: True for paid and internal accounts; false for trials
+        quota:
+          type: object
+          description: Plan limits. Unlimited quotas (internal accounts) serialize as null.
+          required: [plan_name, brands, audits_per_month, competitors_per_brand, custom_queries_per_brand, trend_history_days, white_label]
+          properties:
+            plan_name: {type: string}
+            brands: {type: [integer, 'null']}
+            audits_per_month: {type: [integer, 'null']}
+            competitors_per_brand: {type: [integer, 'null']}
+            custom_queries_per_brand: {type: [integer, 'null']}
+            trend_history_days: {type: integer}
+            white_label: {type: boolean}
+        usage:
+          type: object
+          required: [brands, monitors, audits_this_month, audits_remaining, audit_quota_resets_at]
+          properties:
+            brands: {type: integer}
+            monitors: {type: integer}
+            audits_this_month: {type: integer}
+            audits_remaining: {type: [integer, 'null']}
+            audit_quota_resets_at: {type: string, format: date-time}
+
+    Brand:
+      type: object
+      required: [uuid, name, url, created_at, updated_at]
+      properties:
+        uuid: {type: string, format: uuid}
+        name: {type: string}
+        url: {type: string, format: uri}
+        industry: {type: [string, 'null']}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        latest_audit:
+          type: [object, 'null']
+          properties:
+            uuid: {type: string, format: uuid}
+            status: {$ref: '#/components/schemas/AuditStatus'}
+            overall_score:
+              type: [number, 'null']
+              description: Average trained-mode score across engines, 0–100
+            created_at: {type: string, format: date-time}
+        monitor:
+          type: [object, 'null']
+          properties:
+            uuid: {type: string, format: uuid}
+            status: {$ref: '#/components/schemas/MonitorStatus'}
+
+    Audit:
+      type: object
+      required: [uuid, status, brand_name, brand_url, created_at, updated_at]
+      properties:
+        uuid: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/AuditStatus'}
+        brand:
+          type: [object, 'null']
+          properties:
+            uuid: {type: string, format: uuid}
+            name: {type: string}
+            url: {type: string, format: uri}
+        brand_name: {type: string}
+        brand_url: {type: string, format: uri}
+        overall_score:
+          type: [number, 'null']
+          description: Average trained-mode score across done engines, 0–100
+        recommendations_status: {type: [string, 'null']}
+        share_url:
+          type: [string, 'null']
+          format: uri
+          description: Public read-only report URL — null unless the owner shared the audit
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+
+    AuditDetailed:
+      allOf:
+        - {$ref: '#/components/schemas/Audit'}
+        - type: object
+          required: [reports]
+          properties:
+            reports:
+              type: array
+              items: {$ref: '#/components/schemas/AuditReport'}
+            recommendations: {$ref: '#/components/schemas/Recommendations'}
+
+    AuditReport:
+      description: One engine × mode report. Trial-locked engines expose only the 4-field stub.
+      oneOf:
+        - {$ref: '#/components/schemas/AuditReportLocked'}
+        - {$ref: '#/components/schemas/AuditReportFull'}
+
+    AuditReportLocked:
+      type: object
+      description: Trial paywall stub — nothing beyond the engine's existence is exposed
+      required: [uuid, provider, mode, status]
+      properties:
+        uuid: {type: string, format: uuid}
+        provider: {$ref: '#/components/schemas/Provider'}
+        mode: {$ref: '#/components/schemas/AuditMode'}
+        status:
+          type: string
+          const: locked
+      additionalProperties: false
+
+    AuditReportFull:
+      type: object
+      required: [uuid, provider, mode, status]
+      properties:
+        uuid: {type: string, format: uuid}
+        provider: {$ref: '#/components/schemas/Provider'}
+        mode: {$ref: '#/components/schemas/AuditMode'}
+        model:
+          type: [string, 'null']
+          description: Model identifier used for this report
+        status: {$ref: '#/components/schemas/AuditStatus'}
+        normalized_score:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 100
+        grade:
+          type: [string, 'null']
+          enum: [A, B, C, D, F, null]
+        result:
+          type: [object, 'null']
+          description: Per-section scoring (sections a–f), `scoring_summary` and `analysis` blocks
+        sources:
+          type: [array, 'null']
+          description: Web sources cited (web_search mode)
+          items: {type: object}
+        findings:
+          type: [array, 'null']
+          description: AI-extracted key findings
+          items: {type: object}
+        error:
+          type: string
+          description: Sanitized error description — present only when status is `failed`
+        processed_at: {type: [string, 'null'], format: date-time}
+
+    Recommendations:
+      type: [object, 'null']
+      description: |
+        GEO action plan, gated by plan: `full_access: true` carries the complete
+        recommendations document in `data`; trial accounts get `full_access: false` with only
+        `overall_score_0_10`, `executive_summary` and the top ~25% (min 3) of `action_plan`,
+        plus the count of hidden items in `locked_actions`. Null when not generated yet.
+      required: [full_access, data, locked_actions]
+      properties:
+        full_access: {type: boolean}
+        data:
+          type: object
+          description: Full document when `full_access`; preview subset otherwise
+          properties:
+            overall_score_0_10: {type: [number, 'null']}
+            executive_summary: {type: [string, 'null']}
+            action_plan:
+              type: array
+              items:
+                type: object
+                properties:
+                  title: {type: string}
+                  why: {type: string}
+                  horizon: {type: string}
+                  priority: {type: string, enum: [P0, P1, P2]}
+                  effort: {type: string}
+                  impact: {type: string}
+                  how: {type: string}
+        locked_actions: {type: integer}
+
+    Monitor:
+      type: object
+      required: [uuid, status, brand_name, brand_url, created_at]
+      properties:
+        uuid: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/MonitorStatus'}
+        industry: {type: [string, 'null']}
+        brand:
+          type: [object, 'null']
+          properties:
+            uuid: {type: string, format: uuid}
+            name: {type: string}
+        brand_name: {type: string}
+        brand_url: {type: string, format: uri}
+        tracking_frequency: {type: [string, 'null']}
+        last_run_at: {type: [string, 'null'], format: date-time}
+        created_at: {type: string, format: date-time}
+
+    MonitorDetailed:
+      allOf:
+        - {$ref: '#/components/schemas/Monitor'}
+        - type: object
+          properties:
+            latest_snapshot:
+              oneOf:
+                - {$ref: '#/components/schemas/VisibilitySnapshot'}
+                - type: 'null'
+            recommendations: {$ref: '#/components/schemas/Recommendations'}
+
+    Competitor:
+      type: object
+      required: [id, name, created_at]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        url: {type: [string, 'null'], format: uri}
+        created_at: {type: string, format: date-time}
+
+    PromptTemplate:
+      type: object
+      required: [id, category, template, is_custom, is_active, created_at]
+      properties:
+        id: {type: integer}
+        category: {$ref: '#/components/schemas/PromptCategory'}
+        template:
+          type: string
+          description: Prompt text with `{brand}` / `{competitor}` / `{industry}` placeholders
+        language: {type: [string, 'null']}
+        is_custom: {type: boolean}
+        is_active: {type: boolean}
+        created_at: {type: string, format: date-time}
+
+    PromptRun:
+      type: object
+      required: [uuid, provider, prompt, executed_at]
+      properties:
+        uuid: {type: string, format: uuid}
+        provider: {$ref: '#/components/schemas/Provider'}
+        prompt_template_id: {type: [integer, 'null']}
+        prompt: {type: string}
+        response: {type: [string, 'null']}
+        brand_mentioned: {type: [boolean, 'null']}
+        brand_position:
+          type: [integer, 'null']
+          description: 1-based position of the brand in the answer, when mentioned
+        competitor_mentions:
+          type: [array, 'null']
+          items: {type: object}
+        sentiment: {type: [string, 'null']}
+        sentiment_score: {type: [number, 'null']}
+        citations:
+          type: [array, 'null']
+          items: {type: object}
+        executed_at: {type: [string, 'null'], format: date-time}
+
+    VisibilitySnapshot:
+      type: object
+      required: [date, provider, visibility_score]
+      properties:
+        date: {type: [string, 'null'], format: date}
+        provider:
+          oneOf:
+            - {$ref: '#/components/schemas/Provider'}
+            - type: 'null'
+          description: Null = the overall (cross-engine aggregate) row
+        visibility_score: {type: [number, 'null'], minimum: 0, maximum: 100}
+        mention_count: {type: [integer, 'null']}
+        total_prompts: {type: [integer, 'null']}
+        avg_position: {type: [number, 'null']}
+        sentiment:
+          type: object
+          properties:
+            positive: {type: [integer, 'null']}
+            neutral: {type: [integer, 'null']}
+            negative: {type: [integer, 'null']}
+            net_score: {type: [number, 'null']}
+        competitors:
+          type: [array, object, 'null']
+          description: Per-competitor share-of-voice data
+        top_citations:
+          type: [array, 'null']
+          items: {type: object}

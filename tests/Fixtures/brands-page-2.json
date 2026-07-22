@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "uuid": "33333333-3333-3333-3333-333333333333",
+      "name": "Third Brand",
+      "url": "https://third.example",
+      "industry": "Retail",
+      "created_at": "2026-06-08T09:00:00.000000Z",
+      "updated_at": "2026-06-08T09:00:00.000000Z",
+      "latest_audit": null,
+      "monitor": null
+    }
+  ],
+  "links": {"first": "https://brandgeo.test/api/v1/brands?page=1", "last": "https://brandgeo.test/api/v1/brands?page=2", "prev": "https://brandgeo.test/api/v1/brands?page=1", "next": null},
+  "meta": {"current_page": 2, "from": 3, "last_page": 2, "path": "https://brandgeo.test/api/v1/brands", "per_page": 2, "to": 3, "total": 3}
+}
