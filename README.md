@@ -200,7 +200,9 @@ try {
 }
 ```
 
-Connection failures throw Laravel's `Illuminate\Http\Client\ConnectionException` (enable retries via `BRANDGEO_RETRY_TIMES`).
+Connection failures throw Laravel's `Illuminate\Http\Client\ConnectionException`.
+
+Set `BRANDGEO_RETRY_TIMES` to retry transient failures (connection errors, 5xx and 429). Other 4xx responses are never retried. The value is the total number of attempts, so `3` means up to two retries.
 
 ## Testing
 
@@ -216,6 +218,20 @@ Http::fake([
 ```
 
 Run the package's own suite with `composer test` (Pest + Testbench, fully `Http::fake()`d).
+
+## AI agents (Laravel Boost)
+
+This package ships a [Laravel Boost](https://github.com/laravel/boost) skill, `brandgeo-sdk`, that teaches AI coding agents the client's entry points, pagination, exception map, score scales and testing patterns. It requires Boost 2 or newer:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install          # first time
+php artisan boost:update --discover   # already installed
+```
+
+Select `a2zwebltd/brandgeo-laravel-client` when Boost lists third-party packages.
+
+Boost only scans your app's **direct** Composer dependencies. If you only pull the client in through [`a2zwebltd/brandgeo-laravel-nova`](https://github.com/a2zwebltd/brandgeo-laravel-nova), also require it directly (`composer require a2zwebltd/brandgeo-laravel-client`) so Boost loads the skill.
 
 ## BrandGEO API resources
 
