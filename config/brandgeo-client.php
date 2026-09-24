@@ -56,8 +56,11 @@ return [
     | Retries
     |--------------------------------------------------------------------------
     |
-    | Automatic retries for failed connections. Disabled by default; "sleep"
-    | is the delay between attempts in milliseconds.
+    | Automatic retries for transient failures only: connection errors, 5xx
+    | and 429. Other 4xx responses (401, 402, 404, 422) are never retried.
+    | "times" is the total number of attempts (Laravel's retry() semantics,
+    | so 1 means no retry); 0 disables retries. "sleep" is the delay between
+    | attempts in milliseconds.
     |
     */
 

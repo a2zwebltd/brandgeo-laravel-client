@@ -9,8 +9,11 @@ use A2ZWeb\BrandGeoClient\Resources\AuditsResource;
 use A2ZWeb\BrandGeoClient\Resources\BrandsResource;
 use A2ZWeb\BrandGeoClient\Resources\MonitorsResource;
 use BackedEnum;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
+use Throwable;
 
 final class BrandGeoClient
 {
@@ -96,10 +99,29 @@ final class BrandGeoClient
             ->withOptions(['verify' => $this->verify]);
 
         if ($this->retryTimes > 0) {
-            $request = $request->retry($this->retryTimes, $this->retrySleep, throw: false);
+            $request = $request->retry(
+                $this->retryTimes,
+                $this->retrySleep,
+                when: self::shouldRetry(...),
+                throw: false,
+            );
         }
 
         return $request;
+    }
+
+    /**
+     * Retry only transient failures: connection errors, 5xx and 429. Other 4xx
+     * (401, 402, 404, 422) are deterministic, so retrying them just burns rate limit.
+     */
+    private static function shouldRetry(Throwable $exception): bool
+    {
+        if ($exception instanceof ConnectionException) {
+            return true;
+        }
+
+        return $exception instanceof RequestException
+            && ($exception->response->serverError() || $exception->response->status() === 429);
     }
 
     /**
