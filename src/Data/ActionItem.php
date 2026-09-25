@@ -22,7 +22,7 @@ final readonly class ActionItem
             title: $data['title'] ?? null,
             why: $data['why'] ?? null,
             horizon: $data['horizon'] ?? null,
-            priority: isset($data['priority']) ? RecommendationPriority::tryFrom($data['priority']) : null,
+            priority: isset($data['priority']) ? RecommendationPriority::fromApi($data['priority']) : null,
             effort: $data['effort'] ?? null,
             impact: $data['impact'] ?? null,
             how: $data['how'] ?? null,

@@ -19,7 +19,7 @@ final readonly class LatestAuditSummary
     {
         return new self(
             uuid: $data['uuid'],
-            status: AuditStatus::from($data['status']),
+            status: AuditStatus::fromApi($data['status']),
             overallScore: isset($data['overall_score']) ? (float) $data['overall_score'] : null,
             createdAt: Dates::parse($data['created_at'] ?? null),
         );

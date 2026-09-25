@@ -28,7 +28,7 @@ final readonly class PromptRun
     {
         return new self(
             uuid: $data['uuid'],
-            provider: Provider::from($data['provider']),
+            provider: Provider::fromApi($data['provider']),
             promptTemplateId: $data['prompt_template_id'] ?? null,
             prompt: $data['prompt'],
             response: $data['response'] ?? null,

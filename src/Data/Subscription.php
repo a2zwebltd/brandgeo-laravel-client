@@ -18,7 +18,7 @@ final readonly class Subscription
     public static function fromArray(array $data): self
     {
         return new self(
-            status: SubscriptionStatus::from($data['status']),
+            status: SubscriptionStatus::fromApi($data['status']),
             plan: $data['plan'] ?? null,
             onTrial: (bool) ($data['on_trial'] ?? false),
             trialDaysRemaining: $data['trial_days_remaining'] ?? null,

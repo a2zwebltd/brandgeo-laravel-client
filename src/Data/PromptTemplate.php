@@ -23,7 +23,7 @@ final readonly class PromptTemplate
     {
         return new self(
             id: $data['id'],
-            category: PromptCategory::from($data['category']),
+            category: PromptCategory::fromApi($data['category']),
             template: $data['template'],
             language: $data['language'] ?? null,
             isCustom: (bool) ($data['is_custom'] ?? false),

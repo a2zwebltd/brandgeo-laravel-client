@@ -13,6 +13,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use InvalidArgumentException;
 use Throwable;
 
 final class BrandGeoClient
@@ -76,7 +77,9 @@ final class BrandGeoClient
      */
     public function get(string $path, array $query = []): array
     {
-        $response = $this->pendingRequest()->get($path, $this->normalizeQuery($query));
+        $query = $this->normalizeQuery($query);
+
+        $response = $this->pendingRequest()->get($path, $query);
 
         if ($response->failed()) {
             throw BrandGeoException::fromResponse($response);
@@ -126,6 +129,8 @@ final class BrandGeoClient
 
     /**
      * Drop null filters and serialize enums/booleans the way the API expects.
+     *
+     * @throws InvalidArgumentException when a filter is an enum's `Unknown` case
      */
     private function normalizeQuery(array $query): array
     {
@@ -134,6 +139,13 @@ final class BrandGeoClient
         foreach ($query as $key => $value) {
             if ($value === null) {
                 continue;
+            }
+
+            if ($value instanceof BackedEnum && $value->name === 'Unknown') {
+                throw new InvalidArgumentException(sprintf(
+                    "Cannot filter by %s::Unknown: it stands for a value this client doesn't know, not one the API accepts.",
+                    $value::class,
+                ));
             }
 
             $normalized[$key] = match (true) {

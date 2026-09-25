@@ -42,9 +42,9 @@ final readonly class AuditReport
     {
         return new self(
             uuid: $data['uuid'],
-            provider: Provider::from($data['provider']),
-            mode: AuditMode::from($data['mode']),
-            status: ReportStatus::from($data['status']),
+            provider: Provider::fromApi($data['provider']),
+            mode: AuditMode::fromApi($data['mode']),
+            status: ReportStatus::fromApi($data['status']),
             model: $data['model'] ?? null,
             normalizedScore: isset($data['normalized_score']) ? (float) $data['normalized_score'] : null,
             grade: $data['grade'] ?? null,

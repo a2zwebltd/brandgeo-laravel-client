@@ -15,7 +15,7 @@ final readonly class MonitorSummary
     {
         return new self(
             uuid: $data['uuid'],
-            status: MonitorStatus::from($data['status']),
+            status: MonitorStatus::fromApi($data['status']),
         );
     }
 }

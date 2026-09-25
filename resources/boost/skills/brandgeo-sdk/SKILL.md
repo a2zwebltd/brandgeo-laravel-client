@@ -59,7 +59,7 @@ $client = BrandGeo::withBaseUrl('https://brandgeo.test/api/v1');
 
 `$brand` filters take the brand **uuid**. Null filters are dropped; enums are sent as their value, booleans as `1`/`0`, dates as `Y-m-d`.
 
-Enums (`A2ZWeb\BrandGeoClient\Enums`): `AuditStatus` (Queued, Processing, Done, Failed), `MonitorStatus` (Active, Paused, Archived), `Provider` (Openai, Anthropic, Gemini, Xai, Deepseek), `AuditMode` (Trained, WebSearch), `ReportStatus` (Queued, Processing, Done, Failed, Locked), `PromptCategory`, `RecommendationPriority` (P0–P2), `SubscriptionStatus` (Trial, Active, Free, Expired).
+Enums (`A2ZWeb\BrandGeoClient\Enums`): `AuditStatus` (Queued, Processing, Done, Failed), `MonitorStatus` (Active, Paused, Archived), `Provider` (Openai, Anthropic, Gemini, Xai, Deepseek), `AuditMode` (Trained, WebSearch), `ReportStatus` (Queued, Processing, Done, Failed, Locked), `PromptCategory`, `RecommendationPriority` (P0–P2), `SubscriptionStatus` (Trial, Active, Free, Expired). Every enum also has an `Unknown` case (see Gotchas); use `Enum::known()` instead of `cases()` for dropdowns and filter lists.
 
 `snapshots()` without a provider returns only the overall (cross-engine) rows, where `$snapshot->provider === null` / `isOverall()`. Pass a `Provider` for one engine or `MonitorsResource::PROVIDER_ALL` for everything.
 
@@ -146,7 +146,7 @@ if ($audit->recommendations?->isPreview()) {
 - `Audit::$reports` and `Audit::$recommendations` are null on `audits()->list()`; they are only populated by `audits()->get()`. Same for `Monitor::$latestSnapshot` / `$recommendations`.
 - Locked reports (`ReportStatus::Locked`, `isLocked()`) carry no score, result or findings. Don't treat them as failed.
 - `trend($uuid, days: 365)` is clamped server-side to the plan's history. Read `$trend->daysApplied`, not your input.
-- Unknown enum values from the API throw PHP's `ValueError` during hydration, because DTOs use `Enum::from()` (except `VisibilitySnapshot::$provider` and `ActionItem::$priority`, which use `tryFrom()` and become null). If BrandGEO adds a new provider or status before you upgrade the client, the whole call fails. Catch `ValueError` around calls that must not break and keep the package updated.
+- A value the API sends that this client version doesn't know (a new engine, status or category) hydrates to the enum's `Unknown` case instead of throwing, and `->value` reads `'unknown'`. Give every exhaustive `match` on these enums a `default` arm, or it throws `UnhandledMatchError`. `$snapshot->provider === null` still means the overall row; an unrecognised engine is `Provider::Unknown`. Passing an `Unknown` case as a filter throws `InvalidArgumentException` before any request goes out.
 - `withApiKey()` / `withBaseUrl()` return a new client. Calling them and discarding the result changes nothing.
 
 ## Testing

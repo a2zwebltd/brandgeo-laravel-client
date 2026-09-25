@@ -30,7 +30,7 @@ final readonly class VisibilitySnapshot
     {
         return new self(
             date: Dates::parse($data['date'] ?? null),
-            provider: isset($data['provider']) ? Provider::tryFrom($data['provider']) : null,
+            provider: isset($data['provider']) ? Provider::fromApi($data['provider']) : null,
             visibilityScore: isset($data['visibility_score']) ? (float) $data['visibility_score'] : null,
             mentionCount: $data['mention_count'] ?? null,
             totalPrompts: $data['total_prompts'] ?? null,
