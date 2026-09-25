@@ -36,7 +36,7 @@ final readonly class Audit
     {
         return new self(
             uuid: $data['uuid'],
-            status: AuditStatus::from($data['status']),
+            status: AuditStatus::fromApi($data['status']),
             brand: isset($data['brand']) ? BrandSummary::fromArray($data['brand']) : null,
             brandName: $data['brand_name'],
             brandUrl: $data['brand_url'],

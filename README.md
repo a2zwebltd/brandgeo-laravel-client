@@ -147,6 +147,19 @@ foreach ($trend as $point) {
 }
 ```
 
+## Forward compatibility
+
+When BrandGEO adds a new engine, status or category before you upgrade the package, the DTO holds the enum's `Unknown` case instead of failing the call. Give your `match` expressions a `default` arm, and build UI lists from `Enum::known()`, which leaves `Unknown` out:
+
+```php
+use A2ZWeb\BrandGeoClient\Enums\Provider;
+
+$report->provider->isUnknown();   // true for an engine this version doesn't know yet
+Provider::known();                // every engine except Unknown
+```
+
+`Unknown` can't be used as a filter. Passing it throws `InvalidArgumentException` before any request is sent.
+
 ## Pagination
 
 `foreach ($page)` iterates the fetched page only. `nextPage()` fetches the next one; `lazy()` auto-paginates:

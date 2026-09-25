@@ -28,7 +28,7 @@ final readonly class Monitor
     {
         return new self(
             uuid: $data['uuid'],
-            status: MonitorStatus::from($data['status']),
+            status: MonitorStatus::fromApi($data['status']),
             industry: $data['industry'] ?? null,
             brand: isset($data['brand']) ? BrandSummary::fromArray($data['brand']) : null,
             brandName: $data['brand_name'],
